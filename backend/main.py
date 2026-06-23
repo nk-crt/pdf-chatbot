@@ -18,13 +18,14 @@ from dotenv import load_dotenv
 # =====================================================
 
 app = FastAPI()
+port = int(os.environ.get("PORT", 8000))
 
 # =====================================================
 # Embedding Model
 # =====================================================
 
 model = SentenceTransformer(
-    "BAAI/bge-small-en-v1.5"
+    "sentence-transformers/all-MiniLM-L6-v2"
 )
 
 # =====================================================
