@@ -13,11 +13,21 @@ from qdrant_client.models import (
 import os
 import uuid
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 # =====================================================
 # FastAPI App
 # =====================================================
 
 app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 port = int(os.environ.get("PORT", 8000))
 
 # =====================================================
