@@ -13,7 +13,6 @@ export default function Home() {
   const [blinking, setBlinking] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Eye tracking
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const cx = window.innerWidth / 2;
@@ -26,16 +25,22 @@ export default function Home() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Blink interval
   useEffect(() => {
-    const interval = setInterval(() => {
-      setBlinking(true);
-      setTimeout(() => setBlinking(false), 150);
-    }, 3200);
-    return () => clearInterval(interval);
+    let timer: ReturnType<typeof setTimeout>;
+    function scheduleBlink() {
+      const gap = 2500 + Math.random() * 3000;
+      timer = setTimeout(() => {
+        setBlinking(true);
+        setTimeout(() => {
+          setBlinking(false);
+          scheduleBlink();
+        }, 130);
+      }, gap);
+    }
+    scheduleBlink();
+    return () => clearTimeout(timer);
   }, []);
 
-  // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -119,11 +124,8 @@ export default function Home() {
           padding: 40px 24px 60px;
         }
 
-        /* Header */
-        .header {
-          text-align: center;
-          margin-bottom: 56px;
-        }
+        .header { text-align: center; margin-bottom: 56px; }
+
         .badge {
           display: inline-flex;
           align-items: center;
@@ -139,16 +141,19 @@ export default function Home() {
           text-transform: uppercase;
           margin-bottom: 20px;
         }
+
         .badge-dot {
           width: 6px; height: 6px;
           border-radius: 50%;
           background: #76B900;
           animation: pulse-dot 2s ease-in-out infinite;
         }
+
         @keyframes pulse-dot {
           0%,100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(0.7); }
         }
+
         .title {
           font-size: clamp(32px, 5vw, 52px);
           font-weight: 600;
@@ -156,12 +161,21 @@ export default function Home() {
           line-height: 1.1;
           color: #f0f0f0;
         }
+
         .title span {
           background: linear-gradient(135deg, #76B900 0%, #a8e000 50%, #76B900 100%);
           background-clip: text;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          background-size: 200% 200%;
+          animation: shimmer 3s ease-in-out infinite;
         }
+
+        @keyframes shimmer {
+          0%,100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+
         .subtitle {
           margin-top: 14px;
           font-size: 16px;
@@ -170,30 +184,32 @@ export default function Home() {
           letter-spacing: 0.01em;
         }
 
-        /* Grid */
         .grid {
           display: grid;
           grid-template-columns: 1fr 280px 1fr;
           gap: 28px;
           align-items: start;
         }
+
         @media (max-width: 900px) {
           .grid { grid-template-columns: 1fr; }
           .center-col { order: -1; }
         }
 
-        /* Cards */
         .card {
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.08);
           border-radius: 20px;
           padding: 28px;
           backdrop-filter: blur(12px);
-          transition: border-color 0.3s ease;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
+
         .card:hover {
           border-color: rgba(118,185,0,0.25);
+          box-shadow: 0 0 32px rgba(118,185,0,0.06);
         }
+
         .card-label {
           font-size: 11px;
           font-weight: 600;
@@ -203,7 +219,6 @@ export default function Home() {
           margin-bottom: 18px;
         }
 
-        /* Upload */
         .drop-zone {
           border: 1.5px dashed rgba(118,185,0,0.3);
           border-radius: 14px;
@@ -216,24 +231,31 @@ export default function Home() {
           position: relative;
           overflow: hidden;
         }
+
         .drop-zone:hover {
           border-color: rgba(118,185,0,0.6);
           background: rgba(118,185,0,0.06);
         }
+
         .drop-zone input[type="file"] {
           position: absolute; inset: 0;
           opacity: 0; cursor: pointer; width: 100%; height: 100%;
         }
+
         .drop-icon {
           width: 40px; height: 40px;
           margin: 0 auto 10px;
           background: rgba(118,185,0,0.15);
           border-radius: 10px;
           display: flex; align-items: center; justify-content: center;
+          transition: transform 0.3s ease;
         }
+
+        .drop-zone:hover .drop-icon { transform: scale(1.1) translateY(-2px); }
         .drop-icon svg { color: #76B900; }
         .drop-text { font-size: 13px; color: #888; }
         .drop-text strong { color: #c0c0c0; }
+
         .file-name {
           font-size: 12px;
           color: #76B900;
@@ -263,17 +285,23 @@ export default function Home() {
           position: relative;
           overflow: hidden;
         }
+
         .btn-primary::after {
           content: '';
           position: absolute; inset: 0;
           background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
         }
+
         .btn-primary:hover:not(:disabled) {
           background: #8ed400;
-          transform: translateY(-1px);
-          box-shadow: 0 8px 24px rgba(118,185,0,0.35);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 28px rgba(118,185,0,0.4);
         }
-        .btn-primary:active:not(:disabled) { transform: translateY(0); }
+
+        .btn-primary:active:not(:disabled) {
+          transform: translateY(0px) scale(0.98);
+        }
+
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .upload-success {
@@ -284,9 +312,15 @@ export default function Home() {
           background: rgba(118,185,0,0.08);
           border-radius: 8px;
           border: 1px solid rgba(118,185,0,0.2);
+          animation: fadeSlideIn 0.4s ease;
         }
 
-        /* Character */
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── CENTER COLUMN ── */
         .center-col {
           display: flex;
           flex-direction: column;
@@ -294,21 +328,84 @@ export default function Home() {
           gap: 16px;
           padding-top: 8px;
         }
+
+        .char-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* T2 watermark */
+        .t2-label {
+          position: absolute;
+          font-size: 250px;
+          font-weight: 900;
+          font-family: 'Inter', sans-serif;
+          color: #76B900;
+          opacity: 0.55;
+          letter-spacing: -6px;
+          user-select: none;
+          pointer-events: none;
+          z-index: 0;
+          line-height: 1;
+          text-shadow:
+            0 0 30px rgba(118,185,0,0.55),
+            0 0 70px rgba(118,185,0,0.3),
+            0 0 120px rgba(118,185,0,0.15);
+          animation: T2pulse 2.8s ease-in-out infinite;
+        }
+
+        @keyframes T2pulse {
+          0%,100% {
+            opacity: 0.55;
+            text-shadow:
+              0 0 30px rgba(118,185,0,0.55),
+              0 0 70px rgba(118,185,0,0.3),
+              0 0 120px rgba(118,185,0,0.15);
+          }
+          50% {
+            opacity: 0.80;
+            text-shadow:
+              0 0 50px rgba(118,185,0,0.9),
+              0 0 100px rgba(118,185,0,0.55),
+              0 0 160px rgba(118,185,0,0.3);
+          }
+        }
+
+        /* Character float — smooth squish */
         .char-wrap {
-          animation: float 4s ease-in-out infinite;
-          filter: drop-shadow(0 12px 32px rgba(118,185,0,0.25));
+          position: relative;
+          z-index: 1;
+          animation: floatBounce 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+          filter: drop-shadow(0 14px 36px rgba(118,185,0,0.3));
         }
-        @keyframes float {
-          0%,100% { transform: translateY(0px); }
-          50% { transform: translateY(-14px); }
+
+        @keyframes floatBounce {
+          0%   { transform: translateY(0px)   scaleX(1)    scaleY(1); }
+          20%  { transform: translateY(-6px)  scaleX(0.99) scaleY(1.01); }
+          50%  { transform: translateY(-18px) scaleX(0.97) scaleY(1.04); }
+          80%  { transform: translateY(-6px)  scaleX(0.99) scaleY(1.01); }
+          100% { transform: translateY(0px)   scaleX(1)    scaleY(1); }
         }
+
         .char-status {
           font-size: 12px;
           color: #555;
           text-align: center;
           letter-spacing: 0.05em;
+          transition: color 0.4s ease;
         }
-        .char-status.active { color: #76B900; }
+
+        .char-status.active {
+          color: #76B900;
+          animation: statusPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes statusPulse {
+          0%,100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
 
         /* Chat */
         .chat-messages {
@@ -319,12 +416,14 @@ export default function Home() {
           scrollbar-width: thin;
           scrollbar-color: rgba(118,185,0,0.3) transparent;
         }
+
         .chat-messages::-webkit-scrollbar { width: 4px; }
         .chat-messages::-webkit-scrollbar-track { background: transparent; }
         .chat-messages::-webkit-scrollbar-thumb {
           background: rgba(118,185,0,0.3);
           border-radius: 2px;
         }
+
         .empty-state {
           height: 100%;
           display: flex;
@@ -334,6 +433,7 @@ export default function Home() {
           gap: 10px;
           color: #444;
         }
+
         .empty-icon {
           width: 40px; height: 40px;
           background: rgba(255,255,255,0.04);
@@ -341,19 +441,23 @@ export default function Home() {
           display: flex; align-items: center; justify-content: center;
           font-size: 18px;
         }
+
         .empty-text { font-size: 13px; color: #444; }
 
         .msg-row {
           display: flex;
           margin-bottom: 12px;
-          animation: msg-in 0.25s ease;
+          animation: msgIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        @keyframes msg-in {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
+
+        @keyframes msgIn {
+          from { opacity: 0; transform: translateY(10px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0)    scale(1); }
         }
+
         .msg-row.user { justify-content: flex-end; }
         .msg-row.assistant { justify-content: flex-start; }
+
         .bubble {
           max-width: 82%;
           padding: 10px 14px;
@@ -362,18 +466,21 @@ export default function Home() {
           line-height: 1.6;
           word-break: break-word;
         }
+
         .bubble.user {
           background: #76B900;
           color: #000;
           border-bottom-right-radius: 4px;
           font-weight: 500;
         }
+
         .bubble.assistant {
           background: rgba(255,255,255,0.06);
           border: 1px solid rgba(255,255,255,0.09);
           color: #d0d0d0;
           border-bottom-left-radius: 4px;
         }
+
         .thinking-bubble {
           display: flex; align-items: center; gap: 5px;
           padding: 12px 16px;
@@ -382,21 +489,23 @@ export default function Home() {
           border-radius: 14px;
           border-bottom-left-radius: 4px;
         }
+
         .thinking-dot {
           width: 6px; height: 6px; border-radius: 50%;
           background: #76B900;
-          animation: thinking 1.2s ease-in-out infinite;
-        }
-        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
-        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes thinking {
-          0%,60%,100% { transform: translateY(0); opacity: 0.4; }
-          30% { transform: translateY(-6px); opacity: 1; }
+          animation: thinkBounce 1.2s ease-in-out infinite;
         }
 
-        .chat-input-row {
-          display: flex; gap: 10px; align-items: center;
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes thinkBounce {
+          0%,60%,100% { transform: translateY(0);   opacity: 0.4; }
+          30%          { transform: translateY(-7px); opacity: 1; }
         }
+
+        .chat-input-row { display: flex; gap: 10px; align-items: center; }
+
         .chat-input {
           flex: 1;
           background: rgba(255,255,255,0.05);
@@ -407,13 +516,16 @@ export default function Home() {
           color: #e8e8e8;
           font-family: 'Inter', sans-serif;
           outline: none;
-          transition: border-color 0.2s ease;
+          transition: border-color 0.2s ease, background 0.2s ease;
         }
+
         .chat-input::placeholder { color: #444; }
+
         .chat-input:focus {
           border-color: rgba(118,185,0,0.5);
           background: rgba(255,255,255,0.07);
         }
+
         .send-btn {
           width: 44px; height: 44px;
           background: #76B900;
@@ -423,15 +535,54 @@ export default function Home() {
           flex-shrink: 0;
           transition: all 0.2s ease;
         }
-        .send-btn:hover { background: #8ed400; transform: scale(1.05); }
-        .send-btn:active { transform: scale(0.97); }
+
+        .send-btn:hover { background: #8ed400; transform: scale(1.08) rotate(-5deg); }
+        .send-btn:active { transform: scale(0.95); }
         .send-btn svg { color: #000; }
 
-        /* Glow line */
         .glow-line {
           width: 100%; height: 1px;
           background: linear-gradient(90deg, transparent, rgba(118,185,0,0.5), transparent);
           margin: 0 auto 48px;
+          animation: glowLinePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes glowLinePulse {
+          0%,100% { opacity: 0.6; }
+          50%      { opacity: 1; }
+        }
+
+        /* Arm sway via CSS on SVG groups */
+        .arm-left {
+          transform-origin: 48px 122px;
+          animation: armSwayLeft 3.6s cubic-bezier(0.45,0,0.55,1) infinite;
+        }
+        .arm-right {
+          transform-origin: 152px 122px;
+          animation: armSwayRight 3.6s cubic-bezier(0.45,0,0.55,1) infinite;
+        }
+
+        @keyframes armSwayLeft {
+          0%,100% { transform: rotate(0deg); }
+          25%      { transform: rotate(-10deg); }
+          75%      { transform: rotate(7deg); }
+        }
+
+        @keyframes armSwayRight {
+          0%,100% { transform: rotate(0deg); }
+          25%      { transform: rotate(10deg); }
+          75%      { transform: rotate(-7deg); }
+        }
+
+        /* Ground shadow sync */
+        .ground-shadow-el {
+          animation: shadowSync 3.6s cubic-bezier(0.45,0,0.55,1) infinite;
+          transform-origin: 100px 208px;
+        }
+
+        @keyframes shadowSync {
+          0%,100% { transform: scaleX(1);    opacity: 1; }
+          50%      { transform: scaleX(0.68); opacity: 0.45; }
         }
       `}</style>
 
@@ -452,10 +603,9 @@ export default function Home() {
 
           <div className="glow-line" />
 
-          {/* Main Grid */}
           <div className="grid">
 
-            {/* Upload Card */}
+            {/* ── Upload Card ── */}
             <div className="card">
               <div className="card-label">01 — Upload</div>
 
@@ -472,9 +622,7 @@ export default function Home() {
                     <line x1="12" y1="3" x2="12" y2="15"/>
                   </svg>
                 </div>
-                <div className="drop-text">
-                  <strong>Click to browse</strong> or drag & drop
-                </div>
+                <div className="drop-text"><strong>Click to browse</strong> or drag &amp; drop</div>
                 <div className="drop-text" style={{ marginTop: 4, fontSize: 11 }}>PDF files only</div>
               </div>
 
@@ -508,143 +656,146 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Center Character */}
+            {/* ── Center Character ── */}
             <div className="center-col">
-              <div className="char-wrap">
-                <svg width="200" height="220" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    {/* Body gradient */}
-                    <radialGradient id="bodyGrad" cx="40%" cy="35%" r="60%">
-                      <stop offset="0%" stopColor="#8ecf00"/>
-                      <stop offset="100%" stopColor="#4a7a00"/>
-                    </radialGradient>
+              <div className="char-wrapper">
+
+                {/* T2 — NVIDIA green, dramatic glow, behind character */}
+                <div className="t2-label">T2</div>
+
+                {/* Original green PDFIX dinosaur — unchanged */}
+                <div className="char-wrap">
+                  <svg width="200" height="220" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <radialGradient id="bodyGrad" cx="40%" cy="35%" r="60%">
+                        <stop offset="0%" stopColor="#8ecf00"/>
+                        <stop offset="100%" stopColor="#4a7a00"/>
+                      </radialGradient>
+                      <radialGradient id="bellyGrad" cx="50%" cy="40%" r="60%">
+                        <stop offset="0%" stopColor="#1a1a1a"/>
+                        <stop offset="100%" stopColor="#111"/>
+                      </radialGradient>
+                      <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#76B900" stopOpacity="0.25"/>
+                        <stop offset="100%" stopColor="#76B900" stopOpacity="0"/>
+                      </radialGradient>
+                      <radialGradient id="eyeGrad" cx="35%" cy="35%" r="60%">
+                        <stop offset="0%" stopColor="#1e2a00"/>
+                        <stop offset="100%" stopColor="#0a0a0a"/>
+                      </radialGradient>
+                    </defs>
+
+                    {/* Ground shadow — shrinks when character rises */}
+                    <ellipse className="ground-shadow-el" cx="100" cy="208" rx="56" ry="10" fill="url(#shadowGrad)"/>
+
+                    {/* Body */}
+                    <ellipse cx="100" cy="130" rx="56" ry="62" fill="url(#bodyGrad)"/>
+
                     {/* Belly */}
-                    <radialGradient id="bellyGrad" cx="50%" cy="40%" r="60%">
-                      <stop offset="0%" stopColor="#1a1a1a"/>
-                      <stop offset="100%" stopColor="#111"/>
-                    </radialGradient>
-                    {/* Glow under */}
-                    <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#76B900" stopOpacity="0.25"/>
-                      <stop offset="100%" stopColor="#76B900" stopOpacity="0"/>
-                    </radialGradient>
-                    <radialGradient id="eyeGrad" cx="35%" cy="35%" r="60%">
-                      <stop offset="0%" stopColor="#1e2a00"/>
-                      <stop offset="100%" stopColor="#0a0a0a"/>
-                    </radialGradient>
-                  </defs>
+                    <ellipse cx="100" cy="138" rx="32" ry="38" fill="url(#bellyGrad)" opacity="0.85"/>
 
-                  {/* Ground glow */}
-                  <ellipse cx="100" cy="208" rx="56" ry="10" fill="url(#shadowGrad)"/>
+                    {/* Left arm */}
+                    <g className="arm-left">
+                      <path d="M46 112 Q26 108 22 124 Q18 138 36 140 Q44 142 48 132" fill="#5a9a00" stroke="#3d6e00" strokeWidth="1"/>
+                      <g fill="#3d6e00">
+                        <ellipse cx="26" cy="124" rx="5" ry="3" transform="rotate(-30 26 124)"/>
+                        <ellipse cx="21" cy="130" rx="5" ry="3" transform="rotate(-10 21 130)"/>
+                        <ellipse cx="22" cy="138" rx="5" ry="3" transform="rotate(15 22 138)"/>
+                      </g>
+                    </g>
 
-                  {/* Body */}
-                  <ellipse cx="100" cy="130" rx="56" ry="62" fill="url(#bodyGrad)"/>
+                    {/* Right arm */}
+                    <g className="arm-right">
+                      <path d="M154 112 Q174 108 178 124 Q182 138 164 140 Q156 142 152 132" fill="#5a9a00" stroke="#3d6e00" strokeWidth="1"/>
+                      <g fill="#3d6e00">
+                        <ellipse cx="174" cy="124" rx="5" ry="3" transform="rotate(30 174 124)"/>
+                        <ellipse cx="179" cy="130" rx="5" ry="3" transform="rotate(10 179 130)"/>
+                        <ellipse cx="178" cy="138" rx="5" ry="3" transform="rotate(-15 178 138)"/>
+                      </g>
+                    </g>
 
-                  {/* Belly patch */}
-                  <ellipse cx="100" cy="138" rx="32" ry="38" fill="url(#bellyGrad)" opacity="0.85"/>
+                    {/* Head */}
+                    <circle cx="100" cy="80" r="46" fill="url(#bodyGrad)"/>
 
-                  {/* Left arm */}
-                  <path d="M46 112 Q26 108 22 124 Q18 138 36 140 Q44 142 48 132" fill="#5a9a00" stroke="#3d6e00" strokeWidth="1"/>
-                  {/* Right arm */}
-                  <path d="M154 112 Q174 108 178 124 Q182 138 164 140 Q156 142 152 132" fill="#5a9a00" stroke="#3d6e00" strokeWidth="1"/>
+                    {/* Ears */}
+                    <ellipse cx="68" cy="42" rx="9" ry="14" fill="#5a9a00" transform="rotate(-20 68 42)"/>
+                    <ellipse cx="132" cy="42" rx="9" ry="14" fill="#5a9a00" transform="rotate(20 132 42)"/>
+                    <ellipse cx="68" cy="43" rx="5" ry="9" fill="#3d6e00" transform="rotate(-20 68 43)"/>
+                    <ellipse cx="132" cy="43" rx="5" ry="9" fill="#3d6e00" transform="rotate(20 132 43)"/>
 
-                  {/* Left hand claw */}
-                  <g fill="#3d6e00">
-                    <ellipse cx="26" cy="124" rx="5" ry="3" transform="rotate(-30 26 124)"/>
-                    <ellipse cx="21" cy="130" rx="5" ry="3" transform="rotate(-10 21 130)"/>
-                    <ellipse cx="22" cy="138" rx="5" ry="3" transform="rotate(15 22 138)"/>
-                  </g>
-                  {/* Right hand claw */}
-                  <g fill="#3d6e00">
-                    <ellipse cx="174" cy="124" rx="5" ry="3" transform="rotate(30 174 124)"/>
-                    <ellipse cx="179" cy="130" rx="5" ry="3" transform="rotate(10 179 130)"/>
-                    <ellipse cx="178" cy="138" rx="5" ry="3" transform="rotate(-15 178 138)"/>
-                  </g>
+                    {/* Eye whites */}
+                    <ellipse cx="84" cy="78" rx="14" ry="15" fill="#e8ffe0"/>
+                    <ellipse cx="116" cy="78" rx="14" ry="15" fill="#e8ffe0"/>
 
-                  {/* Head */}
-                  <circle cx="100" cy="80" r="46" fill="url(#bodyGrad)"/>
+                    {/* Pupils — mouse tracking */}
+                    <circle cx={84 + eyePos.x} cy={78 + eyePos.y} r="9" fill="url(#eyeGrad)"/>
+                    <circle cx={116 + eyePos.x} cy={78 + eyePos.y} r="9" fill="url(#eyeGrad)"/>
 
-                  {/* Ear / crest bumps */}
-                  <ellipse cx="68" cy="42" rx="9" ry="14" fill="#5a9a00" transform="rotate(-20 68 42)"/>
-                  <ellipse cx="132" cy="42" rx="9" ry="14" fill="#5a9a00" transform="rotate(20 132 42)"/>
+                    {/* Highlights */}
+                    <circle cx={86 + eyePos.x} cy={75 + eyePos.y} r="3" fill="white" opacity="0.9"/>
+                    <circle cx={118 + eyePos.x} cy={75 + eyePos.y} r="3" fill="white" opacity="0.9"/>
 
-                  {/* Inner ear */}
-                  <ellipse cx="68" cy="43" rx="5" ry="9" fill="#3d6e00" transform="rotate(-20 68 43)"/>
-                  <ellipse cx="132" cy="43" rx="5" ry="9" fill="#3d6e00" transform="rotate(20 132 43)"/>
+                    {/* Blink */}
+                    {blinking && (
+                      <>
+                        <ellipse cx="84" cy="78" rx="14" ry="15" fill="#5a9a00"/>
+                        <ellipse cx="116" cy="78" rx="14" ry="15" fill="#5a9a00"/>
+                      </>
+                    )}
 
-                  {/* Eye whites */}
-                  <ellipse cx="84" cy="78" rx="14" ry="15" fill="#e8ffe0"/>
-                  <ellipse cx="116" cy="78" rx="14" ry="15" fill="#e8ffe0"/>
+                    {/* Nostrils */}
+                    <ellipse cx="95" cy="90" rx="3" ry="2" fill="#3d6e00" opacity="0.6"/>
+                    <ellipse cx="105" cy="90" rx="3" ry="2" fill="#3d6e00" opacity="0.6"/>
 
-                  {/* Pupils (follow mouse) */}
-                  <circle cx={84 + eyePos.x} cy={78 + eyePos.y} r="9" fill="url(#eyeGrad)"/>
-                  <circle cx={116 + eyePos.x} cy={78 + eyePos.y} r="9" fill="url(#eyeGrad)"/>
+                    {/* Mouth */}
+                    {!thinking ? (
+                      <path d="M88 98 Q100 108 112 98" fill="none" stroke="#3d6e00" strokeWidth="2.5" strokeLinecap="round"/>
+                    ) : (
+                      <ellipse cx="100" cy="100" rx="6" ry="7" fill="none" stroke="#3d6e00" strokeWidth="2"/>
+                    )}
 
-                  {/* Eye highlight */}
-                  <circle cx={86 + eyePos.x} cy={75 + eyePos.y} r="3" fill="white" opacity="0.9"/>
-                  <circle cx={118 + eyePos.x} cy={75 + eyePos.y} r="3" fill="white" opacity="0.9"/>
+                    {/* Feet */}
+                    <ellipse cx="82" cy="192" rx="18" ry="8" fill="#4a7a00"/>
+                    <ellipse cx="118" cy="192" rx="18" ry="8" fill="#4a7a00"/>
 
-                  {/* Blink lids */}
-                  {blinking && (
-                    <>
-                      <ellipse cx="84" cy="78" rx="14" ry="15" fill="#5a9a00"/>
-                      <ellipse cx="116" cy="78" rx="14" ry="15" fill="#5a9a00"/>
-                    </>
-                  )}
+                    {/* Toe claws */}
+                    <g fill="#3d6e00">
+                      <ellipse cx="68" cy="194" rx="5" ry="3" transform="rotate(-15 68 194)"/>
+                      <ellipse cx="76" cy="198" rx="5" ry="3"/>
+                      <ellipse cx="85" cy="199" rx="5" ry="3" transform="rotate(10 85 199)"/>
+                    </g>
+                    <g fill="#3d6e00">
+                      <ellipse cx="108" cy="199" rx="5" ry="3" transform="rotate(-10 108 199)"/>
+                      <ellipse cx="117" cy="198" rx="5" ry="3"/>
+                      <ellipse cx="126" cy="194" rx="5" ry="3" transform="rotate(15 126 194)"/>
+                    </g>
 
-                  {/* Nostrils */}
-                  <ellipse cx="95" cy="90" rx="3" ry="2" fill="#3d6e00" opacity="0.6"/>
-                  <ellipse cx="105" cy="90" rx="3" ry="2" fill="#3d6e00" opacity="0.6"/>
+                    {/* PDFIX label */}
+                    <text x="100" y="148" textAnchor="middle" fontSize="9" fontWeight="700" fill="#76B900" fontFamily="Inter, sans-serif" letterSpacing="2" opacity="0.7">PDFIX</text>
 
-                  {/* Smile */}
-                  {!thinking ? (
-                    <path d="M88 98 Q100 108 112 98" fill="none" stroke="#3d6e00" strokeWidth="2.5" strokeLinecap="round"/>
-                  ) : (
-                    /* Thinking face - small o */
-                    <ellipse cx="100" cy="100" rx="6" ry="7" fill="none" stroke="#3d6e00" strokeWidth="2"/>
-                  )}
-
-                  {/* Feet */}
-                  <ellipse cx="82" cy="192" rx="18" ry="8" fill="#4a7a00"/>
-                  <ellipse cx="118" cy="192" rx="18" ry="8" fill="#4a7a00"/>
-
-                  {/* Toe claws */}
-                  <g fill="#3d6e00">
-                    <ellipse cx="68" cy="194" rx="5" ry="3" transform="rotate(-15 68 194)"/>
-                    <ellipse cx="76" cy="198" rx="5" ry="3"/>
-                    <ellipse cx="85" cy="199" rx="5" ry="3" transform="rotate(10 85 199)"/>
-                  </g>
-                  <g fill="#3d6e00">
-                    <ellipse cx="108" cy="199" rx="5" ry="3" transform="rotate(-10 108 199)"/>
-                    <ellipse cx="117" cy="198" rx="5" ry="3"/>
-                    <ellipse cx="126" cy="194" rx="5" ry="3" transform="rotate(15 126 194)"/>
-                  </g>
-
-                  {/* NVIDIA-like logo on belly */}
-                  <text x="100" y="148" textAnchor="middle" fontSize="9" fontWeight="700" fill="#76B900" fontFamily="Inter, sans-serif" letterSpacing="2" opacity="0.7">PDFIX</text>
-
-                  {/* Thinking bubbles */}
-                  {thinking && (
-                    <>
-                      <circle cx="136" cy="58" r="5" fill="#76B900" opacity="0.9">
-                        <animate attributeName="opacity" values="0.9;0.4;0.9" dur="0.8s" repeatCount="indefinite" begin="0s"/>
-                      </circle>
-                      <circle cx="148" cy="46" r="7" fill="#76B900" opacity="0.8">
-                        <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.8s" repeatCount="indefinite" begin="0.15s"/>
-                      </circle>
-                      <circle cx="162" cy="32" r="9" fill="#76B900" opacity="0.7">
-                        <animate attributeName="opacity" values="0.7;0.2;0.7" dur="0.8s" repeatCount="indefinite" begin="0.3s"/>
-                      </circle>
-                    </>
-                  )}
-                </svg>
+                    {/* Thinking bubbles */}
+                    {thinking && (
+                      <>
+                        <circle cx="136" cy="58" r="5" fill="#76B900" opacity="0.9">
+                          <animate attributeName="opacity" values="0.9;0.4;0.9" dur="0.8s" repeatCount="indefinite" begin="0s"/>
+                        </circle>
+                        <circle cx="148" cy="46" r="7" fill="#76B900" opacity="0.8">
+                          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.8s" repeatCount="indefinite" begin="0.15s"/>
+                        </circle>
+                        <circle cx="162" cy="32" r="9" fill="#76B900" opacity="0.7">
+                          <animate attributeName="opacity" values="0.7;0.2;0.7" dur="0.8s" repeatCount="indefinite" begin="0.3s"/>
+                        </circle>
+                      </>
+                    )}
+                  </svg>
+                </div>
               </div>
 
               <div className={`char-status ${thinking ? 'active' : ''}`}>
                 {thinking ? '⚡ Processing...' : uploaded ? '✦ Ready to chat' : '◈ Waiting for PDF'}
               </div>
 
-              {/* Stats row */}
+              {/* Stats */}
               <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ background: 'rgba(118,185,0,0.07)', border: '1px solid rgba(118,185,0,0.15)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
                   <div style={{ fontSize: 18, fontWeight: 600, color: '#76B900' }}>{messages.filter(m => m.role === 'user').length}</div>
@@ -657,7 +808,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Chat Card */}
+            {/* ── Chat Card ── */}
             <div className="card">
               <div className="card-label">02 — Chat</div>
 
